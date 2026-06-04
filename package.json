@@ -1,0 +1,30 @@
+{
+  "name": "premium-3d-website",
+  "version": "1.0.0",
+  "description": "A premium website with 3D animations and cinematic scrolling effects",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "start": "vite"
+  },
+  "dependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "three": "^0.170.0",
+    "@react-three/fiber": "^9.0.0",
+    "@react-three/drei": "^10.0.0",
+    "gsap": "^3.12.7",
+    "3dsvg": "^0.2.1",
+    "@timwickstrom/kinesis": "^1.0.8",
+    "alf-design-animations": "^1.2.5"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@types/three": "^0.170.0",
+    "@vitejs/plugin-react": "^4.4.0",
+    "vite": "^6.0.0"
+  }
+}

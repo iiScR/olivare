@@ -1,0 +1,194 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import { createClient } from '@/lib/supabase'
+import type { Product, Category, CartItem, Review } from '@/types'
+
+const supabase = typeof window !== 'undefined' ? createClient() : null
+
+export function useProducts(options?: {
+  featured?: boolean
+  category?: string
+  scentFamily?: string
+  search?: string
+  limit?: number
+}) {
+  const [products, setProducts] = useState<Product[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!supabase) {
+      setLoading(false)
+      return
+    }
+    async function fetchProducts() {
+      try {
+        let query = supabase.from('products').select('*')
+
+        if (options?.featured) {
+          query = query.eq('featured', true)
+        }
+        if (options?.category) {
+          query = query.eq('category_id', options.category)
+        }
+        if (options?.scentFamily) {
+          query = query.eq('scent_family', options.scentFamily)
+        }
+        if (options?.search) {
+          query = query.ilike('name', `%${options.search}%`)
+        }
+        if (options?.limit) {
+          query = query.limit(options.limit)
+        }
+
+        const { data, error } = await query.order('created_at', { ascending: false })
+
+        if (error) throw error
+        setProducts(data || [])
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Unknown error')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchProducts()
+  }, [options?.featured, options?.category, options?.scentFamily, options?.search, options?.limit])
+
+  return { products, loading, error }
+}
+
+export function useProduct(id: string) {
+  const [product, setProduct] = useState<Product | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!supabase) {
+      setLoading(false)
+      return
+    }
+    async function fetchProduct() {
+      try {
+        const { data, error } = await supabase
+          .from('products')
+          .select('*')
+          .eq('id', id)
+          .single()
+
+        if (error) throw error
+        setProduct(data)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Unknown error')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    if (id) fetchProduct()
+  }, [id])
+
+  return { product, loading, error }
+}
+
+export function useCategories() {
+  const [categories, setCategories] = useState<Category[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!supabase) {
+      setLoading(false)
+      return
+    }
+    async function fetchCategories() {
+      const { data } = await supabase.from('categories').select('*').order('name')
+      setCategories(data || [])
+      setLoading(false)
+    }
+
+    fetchCategories()
+  }, [])
+
+  return { categories, loading }
+}
+
+export function useReviews(productId?: string) {
+  const [reviews, setReviews] = useState<Review[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!supabase) {
+      setLoading(false)
+      return
+    }
+    async function fetchReviews() {
+      let query = supabase.from('reviews').select('*')
+      if (productId) {
+        query = query.eq('product_id', productId)
+      }
+      const { data } = await query.order('created_at', { ascending: false })
+      setReviews(data || [])
+      setLoading(false)
+    }
+
+    fetchReviews()
+  }, [productId])
+
+  return { reviews, loading }
+}
+
+export function useAuth() {
+  const [user, setUser] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!supabase) {
+      setLoading(false)
+      return
+    }
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user)
+      setLoading(false)
+    })
+
+    const { data: listener } = supabase.auth.onAuthStateChange((_, session) => {
+      setUser(session?.user ?? null)
+    })
+
+    return () => {
+      listener.subscription.unsubscribe()
+    }
+  }, [])
+
+  return { user, loading, supabase }
+}
+
+export function useCart() {
+  const [cartItems, setCartItems] = useState<CartItem[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!supabase) {
+      setLoading(false)
+      return
+    }
+    async function fetchCart() {
+      const { data: carts } = await supabase.from('carts').select('*').limit(1)
+      
+      if (carts && carts.length > 0) {
+        const { data: items } = await supabase
+          .from('cart_items')
+          .select('*, product:products(*)')
+          .eq('cart_id', carts[0].id)
+        
+        setCartItems(items || [])
+      }
+      setLoading(false)
+    }
+
+    fetchCart()
+  }, [])
+
+  return { cartItems, loading }
+}
