@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { SlidersHorizontal, X, ChevronDown } from 'lucide-react'
 import { ProductCard } from '@/components/ui/ProductCard'
 import { AnimatedSection } from '@/components/animations/AnimatedSection'
+import { useProducts } from '@/hooks/useSupabase'
 import { scentFamilies, formatPrice } from '@/lib/utils'
 import type { Product } from '@/types'
 
@@ -69,8 +70,11 @@ export default function ProductsPage() {
   const [sortBy, setSortBy] = useState<SortOption>('popularity')
   const [searchQuery, setSearchQuery] = useState('')
 
+  const { products: dbProducts, loading } = useProducts()
+  const sourceProducts = dbProducts.length > 0 ? dbProducts : allProducts
+
   const filteredProducts = useMemo(() => {
-    let result = [...allProducts]
+    let result = [...sourceProducts]
 
     if (scentFamily) {
       result = result.filter((p) => p.scent_family === scentFamily)
@@ -244,7 +248,13 @@ export default function ProductsPage() {
           </AnimatedSection>
 
           {/* Product grid */}
-          {filteredProducts.length > 0 ? (
+          {loading && sourceProducts === allProducts ? (
+            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="aspect-[3/4] rounded-xl bg-surface border border-border animate-pulse" />
+              ))}
+            </div>
+          ) : filteredProducts.length > 0 ? (
             <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
               {filteredProducts.map((product, i) => (
                 <ProductCard key={product.id} product={product} index={i} />

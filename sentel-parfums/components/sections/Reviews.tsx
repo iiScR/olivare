@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { Star, Quote } from 'lucide-react'
 import { AnimatedSection, StaggerContainer, StaggerItem } from '@/components/animations/AnimatedSection'
 import { GlowCard } from '@/components/ui/GlowCard'
+import { useReviews } from '@/hooks/useSupabase'
 
 const reviews = [
   {
@@ -58,6 +59,14 @@ function StarRating({ rating }: { rating: number }) {
 }
 
 export function Reviews() {
+  const { reviews: dbReviews, loading } = useReviews()
+  const displayReviews = dbReviews.length > 0 ? dbReviews.map(r => ({
+    name: r.name,
+    city: r.city || '',
+    rating: r.rating,
+    comment: r.comment || '',
+  })) : reviews
+
   return (
     <section className="section-padding py-20 lg:py-28">
       <div className="max-w-7xl mx-auto">
@@ -73,25 +82,33 @@ export function Reviews() {
           </div>
         </AnimatedSection>
 
-        <StaggerContainer className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {reviews.map((review, i) => (
-            <StaggerItem key={i}>
-              <GlowCard className="p-6 h-full flex flex-col">
-                <Quote className="w-8 h-8 text-primary/20 mb-4" />
-                <p className="text-sm text-text-secondary leading-relaxed flex-1 mb-4">
-                  &ldquo;{review.comment}&rdquo;
-                </p>
-                <div className="flex items-center justify-between pt-4 border-t border-border">
-                  <div>
-                    <p className="font-medium text-sm">{review.name}</p>
-                    <p className="text-xs text-text-muted">{review.city}</p>
+        {loading && dbReviews.length === 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="h-48 rounded-xl bg-surface border border-border animate-pulse" />
+            ))}
+          </div>
+        ) : (
+          <StaggerContainer className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {displayReviews.map((review, i) => (
+              <StaggerItem key={i}>
+                <GlowCard className="p-6 h-full flex flex-col">
+                  <Quote className="w-8 h-8 text-primary/20 mb-4" />
+                  <p className="text-sm text-text-secondary leading-relaxed flex-1 mb-4">
+                    &ldquo;{review.comment}&rdquo;
+                  </p>
+                  <div className="flex items-center justify-between pt-4 border-t border-border">
+                    <div>
+                      <p className="font-medium text-sm">{review.name}</p>
+                      <p className="text-xs text-text-muted">{review.city}</p>
+                    </div>
+                    <StarRating rating={review.rating} />
                   </div>
-                  <StarRating rating={review.rating} />
-                </div>
-              </GlowCard>
-            </StaggerItem>
-          ))}
-        </StaggerContainer>
+                </GlowCard>
+              </StaggerItem>
+            ))}
+          </StaggerContainer>
+        )}
       </div>
     </section>
   )

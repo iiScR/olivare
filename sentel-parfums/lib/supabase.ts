@@ -15,7 +15,7 @@ export const createClient = () => {
 
   // Set session ID for anonymous cart RLS
   const sessionId = generateSessionId()
-  client.rpc('set_config', { key: 'app.session_id', value: sessionId }).catch(() => {})
+  client.rpc('set_app_config', { key: 'session_id', value: sessionId }).then(() => {}, () => {})
 
   return client
 }

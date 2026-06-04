@@ -195,6 +195,14 @@ CREATE POLICY "Reviews are viewable by everyone" ON reviews
 CREATE POLICY "Authenticated users can create reviews" ON reviews
   FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
 
+-- Function to set app config (used for anonymous session RLS)
+CREATE OR REPLACE FUNCTION set_app_config(key TEXT, value TEXT)
+RETURNS VOID AS $$
+BEGIN
+  PERFORM set_config('app.' || key, value, true);
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
 -- Function to update updated_at
 CREATE OR REPLACE FUNCTION update_updated_at()
 RETURNS TRIGGER AS $$

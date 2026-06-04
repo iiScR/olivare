@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { ArrowRight } from 'lucide-react'
 import { ProductCard } from '@/components/ui/ProductCard'
 import { AnimatedSection } from '@/components/animations/AnimatedSection'
+import { useProducts } from '@/hooks/useSupabase'
 import type { Product } from '@/types'
 
 const mockProducts: Product[] = [
@@ -163,6 +164,9 @@ const mockProducts: Product[] = [
 ]
 
 export function FeaturedProducts() {
+  const { products: dbProducts, loading } = useProducts({ featured: true })
+  const displayProducts = dbProducts.length > 0 ? dbProducts : mockProducts
+
   return (
     <section className="section-padding py-20 lg:py-28">
       <div className="max-w-7xl mx-auto">
@@ -182,11 +186,19 @@ export function FeaturedProducts() {
           </Link>
         </AnimatedSection>
 
-        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
-          {mockProducts.map((product, i) => (
-            <ProductCard key={product.id} product={product} index={i} />
-          ))}
-        </div>
+        {loading && dbProducts.length === 0 ? (
+          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="aspect-[3/4] rounded-xl bg-surface border border-border animate-pulse" />
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
+            {displayProducts.map((product, i) => (
+              <ProductCard key={product.id} product={product} index={i} />
+            ))}
+          </div>
+        )}
       </div>
     </section>
   )
